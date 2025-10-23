@@ -7,7 +7,6 @@ import { Feature } from '@/components/ui/feature-with-advantages';
 import { ImpactMetrics } from '@/components/ui/impact-metrics';
 import { LawAIFAQ } from '@/components/ui/lawai-faq';
 import { LawAIFooter } from '@/components/ui/footer-section';
-import { ChatIcon } from '@/components/constants';
 import { ServiceSchema } from '@/components/seo/StructuredData';
 import { LAWAIFAQSchema } from '@/components/seo/FAQSchema';
 
@@ -67,16 +66,6 @@ const HomePage: React.FC = () => {
         <LawAIFAQ />
       </main>
       <LawAIFooter />
-
-      {/* Floating chat button - optimized for mobile */}
-      <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50">
-          <button
-            className="bg-gray-800 text-white p-3 sm:p-4 rounded-full shadow-lg hover:bg-gray-700 transition-all hover:scale-105 active:scale-95 min-w-[56px] min-h-[56px] flex items-center justify-center"
-            aria-label="Open chat"
-          >
-              <ChatIcon />
-          </button>
-      </div>
     </div>
   );
 };
