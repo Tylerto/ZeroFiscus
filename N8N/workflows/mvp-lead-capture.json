@@ -1,0 +1,262 @@
+{
+  "name": "NCNP MVP - Lead Capture & Google Sheets",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ncnp-lead-capture",
+        "responseMode": "responseNode",
+        "options": {
+          "noResponseBody": false
+        }
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "webhookId": "ncnp-lead-capture"
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "timestamp",
+              "value": "={{ $now.format('dd-MM-yyyy HH:mm') }}"
+            },
+            {
+              "name": "leadId",
+              "value": "=NCNP-{{ $now.format('yyyyMMdd') }}-{{ Math.floor(Math.random() * 9000) + 1000 }}"
+            },
+            {
+              "name": "fullName",
+              "value": "={{ $json.body.fullName }}"
+            },
+            {
+              "name": "email",
+              "value": "={{ $json.body.email }}"
+            },
+            {
+              "name": "phone",
+              "value": "={{ $json.body.phone }}"
+            },
+            {
+              "name": "userType",
+              "value": "={{ $json.body.userType }}"
+            },
+            {
+              "name": "hasHighIncome",
+              "value": "={{ $json.body.hasHighIncome === true ? 'Ja' : ($json.body.hasHighIncome === false ? 'Nee' : 'N/A') }}"
+            },
+            {
+              "name": "hasBox3Assets",
+              "value": "={{ $json.body.hasBox3Assets === true ? 'Ja' : ($json.body.hasBox3Assets === false ? 'Nee' : 'N/A') }}"
+            },
+            {
+              "name": "hasRentalProperty",
+              "value": "={{ $json.body.hasRentalProperty === true ? 'Ja' : ($json.body.hasRentalProperty === false ? 'Nee' : 'N/A') }}"
+            },
+            {
+              "name": "hasBV",
+              "value": "={{ $json.body.hasBV === true ? 'Ja' : ($json.body.hasBV === false ? 'Nee' : 'N/A') }}"
+            },
+            {
+              "name": "additionalNotes",
+              "value": "={{ $json.body.additionalNotes || '' }}"
+            },
+            {
+              "name": "status",
+              "value": "Nieuw Lead"
+            },
+            {
+              "name": "contacted",
+              "value": ""
+            },
+            {
+              "name": "estimatedSavings",
+              "value": ""
+            },
+            {
+              "name": "advisorNotes",
+              "value": ""
+            }
+          ]
+        }
+      },
+      "id": "format-data",
+      "name": "Format Data for Sheets",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $env.GOOGLE_SHEET_ID }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Leads",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $json.timestamp }}",
+            "Lead ID": "={{ $json.leadId }}",
+            "Naam": "={{ $json.fullName }}",
+            "Email": "={{ $json.email }}",
+            "Telefoon": "='{{ $json.phone }}",
+            "User Type": "={{ $json.userType }}",
+            "Hoog Inkomen": "={{ $json.hasHighIncome }}",
+            "Box 3 Vermogen": "={{ $json.hasBox3Assets }}",
+            "Verhuurd Vastgoed": "={{ $json.hasRentalProperty }}",
+            "Heeft BV": "={{ $json.hasBV }}",
+            "Extra Notities": "={{ $json.additionalNotes }}",
+            "Status": "={{ $json.status }}",
+            "Gecontacteerd": "={{ $json.contacted }}",
+            "Geschatte Besparing": "={{ $json.estimatedSavings }}",
+            "Adviseur Notities": "={{ $json.advisorNotes }}"
+          }
+        },
+        "options": {
+          "cellFormat": "USER_ENTERED",
+          "useAppend": true
+        }
+      },
+      "id": "google-sheets-append",
+      "name": "Append to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.2,
+      "position": [650, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": true, \"leadId\": $('Format Data for Sheets').item.json.leadId } }}"
+      },
+      "id": "success-response",
+      "name": "Return Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseCode": 500,
+        "responseBody": "={{ { \"success\": false, \"error\": \"Kon gegevens niet opslaan. Probeer het later opnieuw.\" } }}"
+      },
+      "id": "error-response",
+      "name": "Return Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [850, 500]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.body.userType }}",
+              "operation": "isNotEmpty"
+            },
+            {
+              "value1": "={{ $json.body.fullName }}",
+              "operation": "isNotEmpty"
+            },
+            {
+              "value1": "={{ $json.body.email }}",
+              "operation": "isNotEmpty"
+            },
+            {
+              "value1": "={{ $json.body.phone }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "validate-required",
+      "name": "Validate Required Fields",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [350, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Validate Required Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Required Fields": {
+      "main": [
+        [
+          {
+            "node": "Format Data for Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Data for Sheets": {
+      "main": [
+        [
+          {
+            "node": "Append to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append to Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Return Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2025-10-11T00:00:00.000Z",
+  "versionId": "1"
+}

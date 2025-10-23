@@ -1,0 +1,21 @@
+# ZeroFiscus - Robots.txt
+# Allow all search engines to crawl our tax advisory content
+
+User-agent: *
+Allow: /
+
+# Disallow specific paths
+Disallow: /api/
+Disallow: /_next/
+Disallow: /admin/
+Disallow: /portal/login/
+
+# Allow specific important paths
+Allow: /blog/
+Allow: /assessment/
+
+# Sitemap location
+Sitemap: https://zerofiscus.nl/sitemap.xml
+
+# Crawl-delay for politeness (optional)
+Crawl-delay: 1
